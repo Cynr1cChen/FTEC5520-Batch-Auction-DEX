@@ -1,0 +1,10 @@
+# Local development output
+.DS_Store
+.env
+.env.*
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.venv/
+node_modules/
+dist/

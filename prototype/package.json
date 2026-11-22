@@ -1,0 +1,23 @@
+{
+  "name": "ftec5520-topic07-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "compile": "hardhat compile",
+    "node": "hardhat node --hostname 127.0.0.1",
+    "demo:deploy": "hardhat compile && node scripts/demo.js deploy",
+    "demo:reset": "node scripts/demo.js reset",
+    "test": "hardhat compile && node --test test/*.test.js",
+    "demo:export-rules": "hardhat compile && node scripts/export-rules.js"
+  },
+  "devDependencies": {
+    "ethers": "6.15.0",
+    "hardhat": "3.22.0",
+    "solc": "0.8.20"
+  }
+}

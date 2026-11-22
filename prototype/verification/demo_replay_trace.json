@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "assetUnits": {
+    "mETH": 18,
+    "mUSDC": 18
+  },
+  "clearingPriceDecimals": 18,
+  "scenarios": [
+    {
+      "scenarioId": "S2_sell_0",
+      "ruleVersion": "v2.2",
+      "buildVersion": "sha256:39ee00f8bb7649b650b860469795640ee5121fe581966e127cfc386e64255616",
+      "evidenceSource": "py_evm",
+      "chainId": 131277322940537,
+      "addresses": {
+        "batchAuctionDEX": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d",
+        "mockETH": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
+        "mockUSDC": "0x2946259E0334f33A064106302415aD3391BeD384"
+      },
+      "roles": {
+        "alice": "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
+        "bob": "0x1efF47bc3a10a45D4B230B5d10E37751FE6AA718",
+        "deployer": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf"
+      },
+      "initialState": {
+        "pool": {
+          "eth": "100000000000000000000",
+          "usdc": "200000000000000000000000",
+          "ucp": null,
+          "cowUSDC": null
+        },
+        "feeBps": 30,
+        "batchId": 0,
+        "batchEndTime": 1795084906,
+        "batchDurationSeconds": 120
+      },
+      "clearingPrice": "2206018054162487462387",
+      "cowUSDC": "0",
+      "dustWei": {
+        "mETH": "0",
+        "mUSDC": "0"
+      },
+      "settleGas": 268048,
+      "gas": {
+        "byAction": {
+          "submitOrder": 146550,
+          "settleBatch": 268048,
+          "claim": 49545
+        },
+        "total": 464143,
+        "orderCount": 1,
+        "includesApproval": false
+      },
+      "orders": [
+        {
+          "id": "s2-alice",
+          "orderId": 0,
+          "trader": "alice",
+          "side": "buyETH",
+          "assetIn": "mUSDC",
+          "assetOut": "mETH",
+          "submittedIn": "20000000000000000000000",
+          "minOut": "0",
+          "filledIn": "20000000000000000000000",
+          "receivedOut": "9066108938801491315",
+          "refundedIn": "0",
+          "status": "Settled"
+        }
+      ],
+      "steps": [
+        {
+          "label": "submitOrder",
+          "actor": "alice",
+          "action": "submitOrder",
+          "orderId": 0,
+          "txHash": "0xf1e838d8b83859576598e54efd250efb709bafae64d65eaf51858572198a6724",
+          "blockNumber": 39,
+          "transactionIndex": 0,
+          "timestamp": 1795084821,
+          "gasUsed": 146550,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": null,
+            "cowUSDC": null
+          }
+        },
+        {
+          "label": "settleBatch",
+          "actor": "deployer",
+          "action": "settleBatch",
+          "orderId": null,
+          "txHash": "0xc0d0713d47b938f9f480cda8c3223c4540dca908a05e4b626c13f44c497126b0",
+          "blockNumber": 42,
+          "transactionIndex": 0,
+          "timestamp": 1795084943,
+          "gasUsed": 268048,
+          "poolStateAfter": {
+            "eth": "90933891061198508685",
+            "usdc": "220000000000000000000000",
+            "ucp": "2206018054162487462387",
+            "cowUSDC": "0"
+          }
+        },
+        {
+          "label": "claim",
+          "actor": "alice",
+          "action": "claim",
+          "orderId": 0,
+          "txHash": "0x353a15ef02b0c8e44b51260382585558e600ea3db32ddbd954af2c08dd669332",
+          "blockNumber": 43,
+          "transactionIndex": 0,
+          "timestamp": 1795084944,
+          "gasUsed": 49545,
+          "poolStateAfter": {
+            "eth": "90933891061198508685",
+            "usdc": "220000000000000000000000",
+            "ucp": "2206018054162487462387",
+            "cowUSDC": "0"
+          }
+        }
+      ]
+    },
+    {
+      "scenarioId": "S2_sell_5",
+      "ruleVersion": "v2.2",
+      "buildVersion": "sha256:39ee00f8bb7649b650b860469795640ee5121fe581966e127cfc386e64255616",
+      "evidenceSource": "py_evm",
+      "chainId": 131277322940537,
+      "addresses": {
+        "batchAuctionDEX": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d",
+        "mockETH": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
+        "mockUSDC": "0x2946259E0334f33A064106302415aD3391BeD384"
+      },
+      "roles": {
+        "alice": "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
+        "bob": "0x1efF47bc3a10a45D4B230B5d10E37751FE6AA718",
+        "deployer": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf"
+      },
+      "initialState": {
+        "pool": {
+          "eth": "100000000000000000000",
+          "usdc": "200000000000000000000000",
+          "ucp": null,
+          "cowUSDC": null
+        },
+        "feeBps": 30,
+        "batchId": 0,
+        "batchEndTime": 1795084907,
+        "batchDurationSeconds": 120
+      },
+      "clearingPrice": "2100969575392845202273",
+      "cowUSDC": "10504847876964226011365",
+      "dustWei": {
+        "mETH": "0",
+        "mUSDC": "0"
+      },
+      "settleGas": 365353,
+      "gas": {
+        "byAction": {
+          "submitOrder": 278774,
+          "settleBatch": 365353,
+          "claim": 99112
+        },
+        "total": 743239,
+        "orderCount": 2,
+        "includesApproval": false
+      },
+      "orders": [
+        {
+          "id": "s2-alice",
+          "orderId": 0,
+          "trader": "alice",
+          "side": "buyETH",
+          "assetIn": "mUSDC",
+          "assetOut": "mETH",
+          "submittedIn": "20000000000000000000000",
+          "minOut": "0",
+          "filledIn": "20000000000000000000000",
+          "receivedOut": "9519414385741565881",
+          "refundedIn": "0",
+          "status": "Settled"
+        },
+        {
+          "id": "s2-bob",
+          "orderId": 1,
+          "trader": "bob",
+          "side": "sellETH",
+          "assetIn": "mETH",
+          "assetOut": "mUSDC",
+          "submittedIn": "5000000000000000000",
+          "minOut": "0",
+          "filledIn": "5000000000000000000",
+          "receivedOut": "10504847876964226011365",
+          "refundedIn": "0",
+          "status": "Settled"
+        }
+      ],
+      "steps": [
+        {
+          "label": "submitOrder",
+          "actor": "alice",
+          "action": "submitOrder",
+          "orderId": 0,
+          "txHash": "0xf1e838d8b83859576598e54efd250efb709bafae64d65eaf51858572198a6724",
+          "blockNumber": 39,
+          "transactionIndex": 0,
+          "timestamp": 1795084822,
+          "gasUsed": 146550,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": null,
+            "cowUSDC": null
+          }
+        },
+        {
+          "label": "submitOrder",
+          "actor": "bob",
+          "action": "submitOrder",
+          "orderId": 1,
+          "txHash": "0x59076f8cf4efddd7de0dad48e28dbdce64964a6056640d8e474340feed13ed52",
+          "blockNumber": 40,
+          "transactionIndex": 0,
+          "timestamp": 1795084823,
+          "gasUsed": 132224,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": null,
+            "cowUSDC": null
+          }
+        },
+        {
+          "label": "settleBatch",
+          "actor": "deployer",
+          "action": "settleBatch",
+          "orderId": null,
+          "txHash": "0x01294b87bd4d0a3bc129a0b10342f3f025ee26506274b646758c49c82c3c4ab8",
+          "blockNumber": 43,
+          "transactionIndex": 0,
+          "timestamp": 1795084945,
+          "gasUsed": 365353,
+          "poolStateAfter": {
+            "eth": "95480585614258434119",
+            "usdc": "209495152123035773988635",
+            "ucp": "2100969575392845202273",
+            "cowUSDC": "10504847876964226011365"
+          }
+        },
+        {
+          "label": "claim",
+          "actor": "alice",
+          "action": "claim",
+          "orderId": 0,
+          "txHash": "0x353a15ef02b0c8e44b51260382585558e600ea3db32ddbd954af2c08dd669332",
+          "blockNumber": 44,
+          "transactionIndex": 0,
+          "timestamp": 1795084946,
+          "gasUsed": 49545,
+          "poolStateAfter": {
+            "eth": "95480585614258434119",
+            "usdc": "209495152123035773988635",
+            "ucp": "2100969575392845202273",
+            "cowUSDC": "10504847876964226011365"
+          }
+        },
+        {
+          "label": "claim",
+          "actor": "bob",
+          "action": "claim",
+          "orderId": 1,
+          "txHash": "0xd2b79e1b6428b03179925432cdcd91cf98a1efda77c254019a656334651e600c",
+          "blockNumber": 45,
+          "transactionIndex": 0,
+          "timestamp": 1795084947,
+          "gasUsed": 49567,
+          "poolStateAfter": {
+            "eth": "95480585614258434119",
+            "usdc": "209495152123035773988635",
+            "ucp": "2100969575392845202273",
+            "cowUSDC": "10504847876964226011365"
+          }
+        }
+      ]
+    },
+    {
+      "scenarioId": "S2_sell_10",
+      "ruleVersion": "v2.2",
+      "buildVersion": "sha256:39ee00f8bb7649b650b860469795640ee5121fe581966e127cfc386e64255616",
+      "evidenceSource": "py_evm",
+      "chainId": 131277322940537,
+      "addresses": {
+        "batchAuctionDEX": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d",
+        "mockETH": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
+        "mockUSDC": "0x2946259E0334f33A064106302415aD3391BeD384"
+      },
+      "roles": {
+        "alice": "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
+        "bob": "0x1efF47bc3a10a45D4B230B5d10E37751FE6AA718",
+        "deployer": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf"
+      },
+      "initialState": {
+        "pool": {
+          "eth": "100000000000000000000",
+          "usdc": "200000000000000000000000",
+          "ucp": null,
+          "cowUSDC": null
+        },
+        "feeBps": 30,
+        "batchId": 0,
+        "batchEndTime": 1795084908,
+        "batchDurationSeconds": 120
+      },
+      "clearingPrice": "2000000000000000000000",
+      "cowUSDC": "20000000000000000000000",
+      "dustWei": {
+        "mETH": "0",
+        "mUSDC": "0"
+      },
+      "settleGas": 318185,
+      "gas": {
+        "byAction": {
+          "submitOrder": 278774,
+          "settleBatch": 318185,
+          "claim": 99112
+        },
+        "total": 696071,
+        "orderCount": 2,
+        "includesApproval": false
+      },
+      "orders": [
+        {
+          "id": "s2-alice",
+          "orderId": 0,
+          "trader": "alice",
+          "side": "buyETH",
+          "assetIn": "mUSDC",
+          "assetOut": "mETH",
+          "submittedIn": "20000000000000000000000",
+          "minOut": "0",
+          "filledIn": "20000000000000000000000",
+          "receivedOut": "10000000000000000000",
+          "refundedIn": "0",
+          "status": "Settled"
+        },
+        {
+          "id": "s2-bob",
+          "orderId": 1,
+          "trader": "bob",
+          "side": "sellETH",
+          "assetIn": "mETH",
+          "assetOut": "mUSDC",
+          "submittedIn": "10000000000000000000",
+          "minOut": "0",
+          "filledIn": "10000000000000000000",
+          "receivedOut": "20000000000000000000000",
+          "refundedIn": "0",
+          "status": "Settled"
+        }
+      ],
+      "steps": [
+        {
+          "label": "submitOrder",
+          "actor": "alice",
+          "action": "submitOrder",
+          "orderId": 0,
+          "txHash": "0xf1e838d8b83859576598e54efd250efb709bafae64d65eaf51858572198a6724",
+          "blockNumber": 39,
+          "transactionIndex": 0,
+          "timestamp": 1795084823,
+          "gasUsed": 146550,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": null,
+            "cowUSDC": null
+          }
+        },
+        {
+          "label": "submitOrder",
+          "actor": "bob",
+          "action": "submitOrder",
+          "orderId": 1,
+          "txHash": "0x83f89cb0411f4fbc1e666e7f675ef37b265cce03b124251dcf4237325530d779",
+          "blockNumber": 40,
+          "transactionIndex": 0,
+          "timestamp": 1795084824,
+          "gasUsed": 132224,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": null,
+            "cowUSDC": null
+          }
+        },
+        {
+          "label": "settleBatch",
+          "actor": "deployer",
+          "action": "settleBatch",
+          "orderId": null,
+          "txHash": "0xa5e6c962d163b721a1425199e0fd4f697b8415c8af1765d516f286b4856337cc",
+          "blockNumber": 43,
+          "transactionIndex": 0,
+          "timestamp": 1795084946,
+          "gasUsed": 318185,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": "2000000000000000000000",
+            "cowUSDC": "20000000000000000000000"
+          }
+        },
+        {
+          "label": "claim",
+          "actor": "alice",
+          "action": "claim",
+          "orderId": 0,
+          "txHash": "0x353a15ef02b0c8e44b51260382585558e600ea3db32ddbd954af2c08dd669332",
+          "blockNumber": 44,
+          "transactionIndex": 0,
+          "timestamp": 1795084947,
+          "gasUsed": 49545,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": "2000000000000000000000",
+            "cowUSDC": "20000000000000000000000"
+          }
+        },
+        {
+          "label": "claim",
+          "actor": "bob",
+          "action": "claim",
+          "orderId": 1,
+          "txHash": "0xd2b79e1b6428b03179925432cdcd91cf98a1efda77c254019a656334651e600c",
+          "blockNumber": 45,
+          "transactionIndex": 0,
+          "timestamp": 1795084948,
+          "gasUsed": 49567,
+          "poolStateAfter": {
+            "eth": "100000000000000000000",
+            "usdc": "200000000000000000000000",
+            "ucp": "2000000000000000000000",
+            "cowUSDC": "20000000000000000000000"
+          }
+        }
+      ]
+    }
+  ]
+}

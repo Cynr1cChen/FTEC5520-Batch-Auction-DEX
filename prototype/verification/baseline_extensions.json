@@ -1,0 +1,463 @@
+{
+  "evidence_source": "local_py_evm",
+  "rule_version": "v2.2",
+  "asset_decimals": {
+    "mETH": 18,
+    "mUSDC": 18
+  },
+  "gas_scope": "Successful transaction receipts only. Native gas units, excluding deployment and pre-authorization.",
+  "inventory_comparison": {
+    "no_additional_seller": {
+      "batch1_ucp": "2506.018054162",
+      "purchased_mETH": "11.971182710",
+      "additional_seller_mETH": "0.000000000",
+      "batch2_ucp": "2709.731065062",
+      "inventory_sale_proceeds_mUSDC": "32438.685673809",
+      "cash_delta_mUSDC_before_native_gas": "2438.685673809",
+      "cash_delta_raw": "2438685673809364160136",
+      "batch1": {
+        "submit": [
+          146550,
+          132250
+        ],
+        "settle": 304738,
+        "dust": {
+          "mETH": "0",
+          "mUSDC": "0"
+        },
+        "claim": [
+          49545,
+          49557
+        ]
+      },
+      "batch2": {
+        "submit": [
+          149348
+        ],
+        "settle": 251591,
+        "dust": {
+          "mETH": "0",
+          "mUSDC": "0"
+        },
+        "claim": [
+          49567
+        ]
+      }
+    },
+    "additional_seller": {
+      "batch1_ucp": "2506.018054162",
+      "purchased_mETH": "11.971182710",
+      "additional_seller_mETH": "15.000000000",
+      "batch2_ucp": "2330.783308796",
+      "inventory_sale_proceeds_mUSDC": "27902.232846142",
+      "cash_delta_mUSDC_before_native_gas": "-2097.767153858",
+      "cash_delta_raw": "-2097767153858134150745",
+      "batch1": {
+        "submit": [
+          146550,
+          132250
+        ],
+        "settle": 304738,
+        "dust": {
+          "mETH": "0",
+          "mUSDC": "0"
+        },
+        "claim": [
+          49545,
+          49557
+        ]
+      },
+      "batch2": {
+        "submit": [
+          149348,
+          132224
+        ],
+        "settle": 288065,
+        "dust": {
+          "mETH": "0",
+          "mUSDC": "1"
+        },
+        "claim": [
+          49567,
+          49567
+        ]
+      }
+    }
+  },
+  "ordinary_ordering_comparison": [
+    {
+      "venue": "amm",
+      "buyer_first": true,
+      "different_batches": false,
+      "buyer_minimum_mETH": "0.000000",
+      "status": {
+        "buyer": "filled",
+        "seller": "filled"
+      },
+      "buyer_received_mETH": "9.066108939",
+      "seller_received_mUSDC": "21737.516531148",
+      "buyer_received_raw": "9066108938801491315",
+      "seller_received_raw": "21737516531148401460337"
+    },
+    {
+      "venue": "amm",
+      "buyer_first": false,
+      "different_batches": false,
+      "buyer_minimum_mETH": "0.000000",
+      "status": {
+        "seller": "filled",
+        "buyer": "filled"
+      },
+      "buyer_received_mETH": "10.868758266",
+      "seller_received_mUSDC": "18132.217877603",
+      "buyer_received_raw": "10868758265574200730",
+      "seller_received_raw": "18132217877602982631626"
+    },
+    {
+      "venue": "batch",
+      "buyer_first": true,
+      "different_batches": false,
+      "buyer_minimum_mETH": "0.000000",
+      "status": {
+        "buyer": "filled",
+        "seller": "filled"
+      },
+      "buyer_received_mETH": "10.000000000",
+      "seller_received_mUSDC": "20000.000000000",
+      "buyer_received_raw": "10000000000000000000",
+      "seller_received_raw": "20000000000000000000000"
+    },
+    {
+      "venue": "batch",
+      "buyer_first": false,
+      "different_batches": false,
+      "buyer_minimum_mETH": "0.000000",
+      "status": {
+        "seller": "filled",
+        "buyer": "filled"
+      },
+      "buyer_received_mETH": "10.000000000",
+      "seller_received_mUSDC": "20000.000000000",
+      "buyer_received_raw": "10000000000000000000",
+      "seller_received_raw": "20000000000000000000000"
+    },
+    {
+      "venue": "batch",
+      "buyer_first": true,
+      "different_batches": true,
+      "buyer_minimum_mETH": "0.000000",
+      "status": {
+        "buyer": "filled",
+        "seller": "filled"
+      },
+      "buyer_received_mETH": "9.066108939",
+      "seller_received_mUSDC": "21737.516531148",
+      "buyer_received_raw": "9066108938801491315",
+      "seller_received_raw": "21737516531148401460337"
+    },
+    {
+      "venue": "amm",
+      "buyer_first": true,
+      "different_batches": false,
+      "buyer_minimum_mETH": "9.500000",
+      "status": {
+        "buyer": "reverted",
+        "seller": "filled"
+      },
+      "buyer_received_mETH": "0.000000000",
+      "seller_received_mUSDC": "18132.217877603",
+      "buyer_received_raw": "0",
+      "seller_received_raw": "18132217877602982631626"
+    },
+    {
+      "venue": "batch",
+      "buyer_first": true,
+      "different_batches": false,
+      "buyer_minimum_mETH": "9.500000",
+      "status": {
+        "buyer": "filled",
+        "seller": "filled"
+      },
+      "buyer_received_mETH": "10.000000000",
+      "seller_received_mUSDC": "20000.000000000",
+      "buyer_received_raw": "10000000000000000000",
+      "seller_received_raw": "20000000000000000000000"
+    }
+  ],
+  "same_flow_gas": [
+    {
+      "order_count": 20,
+      "batch": {
+        "receipt_gas_by_phase": {
+          "submit": [
+            146538,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224
+          ],
+          "settle": [
+            974793
+          ],
+          "claim": [
+            49545,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567
+          ]
+        },
+        "phase_totals": {
+          "submit": 2658920,
+          "settle": 974793,
+          "claim": 991228
+        },
+        "total_gas": 4624941,
+        "gas_per_order": 231247.05
+      },
+      "amm": {
+        "receipt_gas": [
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489
+        ],
+        "total_gas": 1450760,
+        "gas_per_order": 72538.0
+      },
+      "batch_to_amm_gas_ratio": 3.187944
+    },
+    {
+      "order_count": 50,
+      "batch": {
+        "receipt_gas_by_phase": {
+          "submit": [
+            146538,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224,
+            132238,
+            132224
+          ],
+          "settle": [
+            2068751
+          ],
+          "claim": [
+            49545,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567,
+            49557,
+            49567
+          ]
+        },
+        "phase_totals": {
+          "submit": 6625850,
+          "settle": 2068751,
+          "claim": 2478088
+        },
+        "total_gas": 11172689,
+        "gas_per_order": 223453.78
+      },
+      "amm": {
+        "receipt_gas": [
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489,
+          72587,
+          72489
+        ],
+        "total_gas": 3626900,
+        "gas_per_order": 72538.0
+      },
+      "batch_to_amm_gas_ratio": 3.080506
+    }
+  ],
+  "boundaries": {
+    "settle_before_close_rejected": true,
+    "submit_at_close_rejected": true,
+    "empty_batch_settlement_gas": 123139,
+    "all_refunded_settlement_gas": 205136,
+    "order_after_batch_capacity_rejected": true,
+    "prior_batch_claim_available_after_next_settlement": true
+  }
+}

@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+# Resolve the runtime without changing shell profiles or system installations.
+bundled="${HOME}/.cache/codex-runtimes/codex-primary-runtime/dependencies"
+if [ -n "${FTEC5520_NODE_BIN:-}" ]; then
+    PATH="$FTEC5520_NODE_BIN:$PATH"
+elif ! command -v node >/dev/null 2>&1 || ! node --eval 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)'; then
+    PATH="$bundled/node/bin:$PATH"
+fi
+export PATH
+if ! command -v node >/dev/null 2>&1 || ! node --eval 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)'; then
+    echo 'Node.js 24 is required. Add it to PATH or set FTEC5520_NODE_BIN to its bin directory.' >&2
+    exit 1
+fi
+
+if [ -n "${FTEC5520_PNPM:-}" ]; then
+    pnpm_command="$FTEC5520_PNPM"
+elif command -v pnpm >/dev/null 2>&1; then
+    pnpm_command=$(command -v pnpm)
+else
+    pnpm_command="$bundled/bin/fallback/pnpm"
+fi
+if [ ! -x "$pnpm_command" ] || [ "$("$pnpm_command" --version)" != '11.25.0' ]; then
+    echo 'pnpm 11.25.0 is required. Add it to PATH or set FTEC5520_PNPM to its executable.' >&2
+    exit 1
+fi
+exec "$pnpm_command" "$@"

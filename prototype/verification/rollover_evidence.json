@@ -1,0 +1,137 @@
+{
+  "evidence_source": "local_py_evm",
+  "contract_rule_version": "v2.2",
+  "policy": "opt-in manual resubmission after claim of an unchanged refunded order, once in the immediately following batch",
+  "scope": "The opt-in and policy checks are off-chain. The holder sends separate claim and submit transactions. All token movements are executed by the original mock-token contracts.",
+  "fee_scope": "Native gas by transaction and batch, excluding pre-authorization and deployment.",
+  "initial_mETH_reserve": 100,
+  "initial_mUSDC_reserve": 200000,
+  "batch_seconds": 120,
+  "buyer_order": {
+    "mUSDC": 20000,
+    "min_mETH": "9.7"
+  },
+  "seller_order": {
+    "mETH": 10,
+    "min_mUSDC": 18000
+  },
+  "cases": {
+    "no_consent": {
+      "opt_in": false,
+      "seller_batch": 1,
+      "first_outcome": "refunded",
+      "second_outcome": null,
+      "resubmitted": false,
+      "buyer_resolution_elapsed_seconds": 86,
+      "buyer_custody_seconds_by_attempt": [
+        86
+      ],
+      "buyer_redeemed_mETH": "0.000000000",
+      "buyer_debit_mUSDC": "0.000000000",
+      "matched_mUSDC_by_batch": [
+        "0.000000000",
+        "0.000000000"
+      ],
+      "buyer_gas_by_attempt": [
+        {
+          "submit": 166522,
+          "claim": 49548
+        }
+      ],
+      "settlement_gas_by_batch": [
+        184571,
+        251591
+      ]
+    },
+    "matched_next_batch": {
+      "opt_in": true,
+      "seller_batch": 1,
+      "first_outcome": "refunded",
+      "second_outcome": "filled",
+      "resubmitted": true,
+      "buyer_resolution_elapsed_seconds": 206,
+      "buyer_custody_seconds_by_attempt": [
+        86,
+        119
+      ],
+      "buyer_redeemed_mETH": "10.000000000",
+      "buyer_debit_mUSDC": "20000.000000000",
+      "matched_mUSDC_by_batch": [
+        "0.000000000",
+        "20000.000000000"
+      ],
+      "buyer_gas_by_attempt": [
+        {
+          "submit": 166522,
+          "claim": 49548
+        },
+        {
+          "submit": 169322,
+          "claim": 49557
+        }
+      ],
+      "settlement_gas_by_batch": [
+        184571,
+        301319
+      ]
+    },
+    "expired_no_match": {
+      "opt_in": true,
+      "seller_batch": null,
+      "first_outcome": "refunded",
+      "second_outcome": "refunded",
+      "resubmitted": true,
+      "buyer_resolution_elapsed_seconds": 206,
+      "buyer_custody_seconds_by_attempt": [
+        86,
+        119
+      ],
+      "buyer_redeemed_mETH": "0.000000000",
+      "buyer_debit_mUSDC": "0.000000000",
+      "matched_mUSDC_by_batch": [
+        "0.000000000",
+        "0.000000000"
+      ],
+      "buyer_gas_by_attempt": [
+        {
+          "submit": 166522,
+          "claim": 49548
+        },
+        {
+          "submit": 169322,
+          "claim": 49560
+        }
+      ],
+      "settlement_gas_by_batch": [
+        184571,
+        167471
+      ]
+    },
+    "filled_first_batch": {
+      "opt_in": true,
+      "seller_batch": 0,
+      "first_outcome": "filled",
+      "second_outcome": null,
+      "resubmitted": false,
+      "buyer_resolution_elapsed_seconds": 86,
+      "buyer_custody_seconds_by_attempt": [
+        86
+      ],
+      "buyer_redeemed_mETH": "10.000000000",
+      "buyer_debit_mUSDC": "20000.000000000",
+      "matched_mUSDC_by_batch": [
+        "20000.000000000",
+        null
+      ],
+      "buyer_gas_by_attempt": [
+        {
+          "submit": 166522,
+          "claim": 49545
+        }
+      ],
+      "settlement_gas_by_batch": [
+        318419
+      ]
+    }
+  }
+}

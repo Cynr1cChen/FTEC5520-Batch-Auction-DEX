@@ -1,0 +1,94 @@
+{
+  "compile": "OK",
+  "scenarios": {
+    "S1_TraditionalAMM": {
+      "alice_fair_eth": "9.066109",
+      "alice_sandwiched_eth": "6.940033",
+      "alice_loss_pct": "23.45%",
+      "bot_net_profit_usdc": "4858.845533",
+      "amm_post_reserve_eth": "93.059967",
+      "amm_post_reserve_usdc": "215141.154467"
+    },
+    "S1_BatchAuctionDEX": {
+      "execution_mode": "sequential_tx_order_verified_plus_3_permutations_invariant",
+      "permutation_invariance_3_orders_identical": true,
+      "ucp_usdc_per_eth": "2217.5299",
+      "alice_eth_out": "9.019044",
+      "cow_usdc": "28848.82",
+      "bot_delta_usdc": "-1151.1816",
+      "bot_delta_eth": "0.519128",
+      "bot_pnl_marked_at_ucp": "-0.000000",
+      "dex_post_reserve_eth": "90.461828",
+      "dex_post_reserve_usdc": "221151.181587",
+      "s1_eth_dust_wei": 1,
+      "s1_usdc_dust_wei": 0
+    },
+    "S2_PureCoW": {
+      "ucp": "2000.0000",
+      "cow_usdc": "20000.00",
+      "alice_eth_out": "10.000000",
+      "bob_usdc_out": "20000.00",
+      "reserve_eth_unchanged": true,
+      "reserve_usdc_unchanged": true
+    },
+    "S3_CrossBatch": {
+      "batch1_ucp": "2506.0181",
+      "bot_eth_acquired": "11.971183",
+      "batch2_ucp": "2330.7833",
+      "bot_usdc_recovered": "27902.2328",
+      "bot_net_pnl_usdc": "-2097.7672"
+    }
+  },
+  "tests": {
+    "T03_NetBuy_NetSell": {
+      "net_buy_ucp": "2041.8346",
+      "net_buy_k_preserved": true,
+      "net_sell_ucp": "1958.2795",
+      "net_sell_k_preserved": true
+    },
+    "T06_T07_Controls_And_Conservation": {
+      "revert_early_settle": "PASS_REVERT [BatchWindowNotClosed(uint256,uint256) -> 0x25abfb0c]: execution reverted: b'%\\xab\\xfb\\x0c\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0",
+      "revert_late_submit": "PASS_REVERT [BatchWindowClosed(uint256,uint256) -> 0x8279dd65]: execution reverted: b'\\x82y\\xdde\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x",
+      "revert_wrong_owner": "PASS_REVERT [NotOrderOwner(uint256) -> 0xaa082d80]: execution reverted: b'\\xaa\\x08-\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0",
+      "revert_double_claim": "PASS_REVERT [AlreadyClaimed(uint256) -> 0xb3167bfa]: execution reverted: b'\\xb3\\x16{\\xfa\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0",
+      "t06_round0_ucp": "2023.6528",
+      "t06_round0_bad_order_out_eth": "0.988312",
+      "t06_bad_order_refund_amount_usdc": "2000.00",
+      "bad_order_status_Refunded_eq_2": true,
+      "alice_settled_status_eq_1": true,
+      "bob_settled_status_eq_1": true,
+      "dex_eth_balance_ge_reserve": true,
+      "dex_usdc_balance_ge_reserve": true,
+      "eth_dust_wei": 0,
+      "usdc_dust_wei": 0
+    },
+    "T06b_Cascading_3Round": {
+      "final_ucp": "2000.0000",
+      "statuses": [
+        1,
+        1,
+        2,
+        2
+      ],
+      "refundedCount": 2,
+      "settle_gas_3round": 411190
+    }
+  },
+  "gas": {
+    "MockToken_deploy_gas": 471410,
+    "TraditionalAMM_deploy_gas": 522819,
+    "BatchAuctionDEX_deploy_gas": 1399849,
+    "TraditionalAMM_swap_gas": 72599,
+    "BatchAuctionDEX_submitOrder_gas": 146550,
+    "BatchAuctionDEX_settleBatch_3orders_gas": 401809,
+    "BatchAuctionDEX_claim_gas": 49545,
+    "settleBatch_scaling": {
+      "n_1": 268048,
+      "n_5": 474740,
+      "n_10": 609906,
+      "n_20": 974558
+    },
+    "BatchAuctionDEX_full_lifecycle_per_order_n20_gas": 244822,
+    "full_lifecycle_vs_amm_ratio_n20": "3.37x"
+  }
+}
