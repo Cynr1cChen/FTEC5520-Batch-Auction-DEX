@@ -1,6 +1,6 @@
 # FTEC5520 Batch Auction DEX
 
-CUHK FTEC5520A · Group 9 · Topic 07
+CUHK FTEC5520A · Group 9
 
 A classroom prototype comparing sequential constant-product swaps with batch settlement. The batch DEX uses a uniform clearing price, directly matches opposing orders where possible, and routes residual demand through its pool. The rule lab compares the original clearing rule with whole-order reconsideration (A), opt-in two-tier partial filling (B), and their sequential combination (A+B).
 
@@ -10,9 +10,9 @@ All assets and transactions in Live mode are on a local Hardhat test chain. The 
 
 | Resource | Where to find it |
 | --- | --- |
-| System design, results, and defense questions | [项目原理深度学习与答辩通关手册](docs/FTEC5520_Topic07_项目原理深度学习与答辩通关手册.pdf) |
-| How to navigate the five acts | [前端界面讲解与 Demo 走位排练手册](docs/FTEC5520_Topic07_前端界面讲解与Demo走位排练手册.pdf) |
-| English narration with Chinese cues | [课堂 Demo 演示双语讲稿](docs/FTEC5520_Topic07_课堂Demo演示双语讲稿.pdf) |
+| System design, results, and defense questions | [项目原理深度学习与答辩通关手册](docs/FTEC5520_项目原理深度学习与答辩通关手册.pdf) |
+| How to navigate the five acts | [前端界面讲解与 Demo 走位排练手册](docs/FTEC5520_前端界面讲解与Demo走位排练手册.pdf) |
+| English narration with Chinese cues | [课堂 Demo 演示双语讲稿](docs/FTEC5520_课堂Demo演示双语讲稿.pdf) |
 | Smart contracts and local tests | [Contracts](prototype/contracts/) · [Tests](prototype/test/) |
 | Replay and research datasets | [Verification](prototype/verification/) |
 

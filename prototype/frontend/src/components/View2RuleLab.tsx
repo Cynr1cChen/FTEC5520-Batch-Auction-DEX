@@ -20,6 +20,7 @@ import {
 } from '../lib/liveClient';
 import { reconcileTraces } from '../lib/reconcile';
 import type { ScenarioTrace } from '../types/trace';
+import type { ReceiptFocus } from './ReceiptDrawer';
 import { ReconcileBadge } from './ReconcileBadge';
 
 type LabRule = (typeof RULE_ORDER)[number];
@@ -34,7 +35,7 @@ interface View2RuleLabProps {
     scenarioId: string,
     callbacks?: LiveRuleSuiteCallbacks,
   ) => Promise<Record<LabRule, ScenarioTrace> | null>;
-  onTraceFocus: (traces: ScenarioTrace[]) => void;
+  onTraceFocus: (focus: ReceiptFocus) => void;
 }
 
 const ONE_USDC = 10n ** 18n;
@@ -77,6 +78,7 @@ export function View2RuleLab({
     setAnimating(false);
     setAnimatedShownCount(null);
     setActiveStepEvent(null);
+    setActiveRunningRule(null);
   }, [mode]);
 
   useEffect(() => {
@@ -95,9 +97,21 @@ export function View2RuleLab({
     RULE_ORDER.map((r) => [r, getTrace(scenarioId, r)]),
   ) as Record<LabRule, ScenarioTrace>;
 
-  const livePartial = liveSuite[scenarioId] ?? {};
+  const liveForScenario = liveSuite[scenarioId];
+  const livePartial = liveForScenario ?? {};
   const allLiveCompleted = RULE_ORDER.every((r) => Boolean(livePartial[r]));
   const anyLiveRunningOrDone = activeRunningRule !== null || RULE_ORDER.some((r) => Boolean(livePartial[r]));
+
+  useEffect(() => {
+    onTraceFocus({
+      source: mode,
+      sceneLabel: `Act 5 · ${scenarioId}`,
+      traces:
+        mode === 'live'
+          ? (RULE_ORDER.map((r) => liveForScenario?.[r]).filter(Boolean) as ScenarioTrace[])
+          : RULE_ORDER.map((r) => getTrace(scenarioId, r)),
+    });
+  }, [mode, scenarioId, liveForScenario, resetGeneration, onTraceFocus]);
 
   const activeByRule: Record<LabRule, ScenarioTrace> = Object.fromEntries(
     RULE_ORDER.map((r) => [r, mode === 'live' && livePartial[r] ? livePartial[r]! : replayByRule[r]]),
@@ -130,30 +144,29 @@ export function View2RuleLab({
     setActiveStepEvent(null);
     setScenarioId(nextId);
     setFocusedRule(DEFAULT_FOCUS_BY_PRESET[nextId]);
-    const nextTraces = RULE_ORDER.map((r) =>
-      mode === 'live' && liveSuite[nextId]?.[r] ? liveSuite[nextId]![r]! : getTrace(nextId, r),
-    );
-    onTraceFocus(nextTraces);
   }
 
   async function triggerSuiteLive() {
+    const token = ++tokenRef.current;
     const sid = scenarioId;
-    tokenRef.current += 1;
     setAnimating(false);
     setAnimatedShownCount(null);
     setLiveSuite((prev) => ({ ...prev, [sid]: {} }));
     setFocusedRule('v2.2');
 
-    const res = await onRunRuleSuite(sid, {
+    await onRunRuleSuite(sid, {
       onRuleStart: (rule) => {
+        if (tokenRef.current !== token) return;
         setActiveRunningRule(rule);
         setActiveStepEvent(null);
         setFocusedRule(rule);
       },
       onRuleStep: (_rule, evt) => {
+        if (tokenRef.current !== token) return;
         setActiveStepEvent(evt);
       },
       onRuleComplete: (rule, trace) => {
+        if (tokenRef.current !== token) return;
         setLiveSuite((prev) => ({
           ...prev,
           [sid]: { ...(prev[sid] ?? {}), [rule]: trace },
@@ -161,12 +174,10 @@ export function View2RuleLab({
       },
       stepDelayMs: 130,
     });
+    if (tokenRef.current !== token) return;
     setActiveRunningRule(null);
     setActiveStepEvent(null);
     setFocusedRule(DEFAULT_FOCUS_BY_PRESET[sid]);
-    if (res) {
-      onTraceFocus(RULE_ORDER.map((r) => res[r]));
-    }
   }
 
   async function animateReplayRace() {
@@ -609,9 +620,9 @@ export function View2RuleLab({
             <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-1.5 text-sm font-extrabold text-slate-900">
                 <BarChart3 className="h-4 w-4 text-indigo-600" />
-                <span>{t('Benefit vs Cost (CoW Match vs Total Gas)', '收益 vs 成本双指标对照（CoW 直配 vs 全流程 Gas）')}</span>
+                <span>{t('Matched Volume vs Gas (CoW Volume vs Total Gas)', '直配成交额 vs Gas 对照（CoW 成交额 vs 全流程 Gas）')}</span>
               </div>
-              <span className="text-[10px] text-slate-400">{t('Excl. deploy & approve', '不含部署与预授权')}</span>
+              <span className="text-[10px] text-slate-400">{t('Volume ≠ surplus · Excl. deploy/approve', '成交额≠净盈余 · 不含部署/授权')}</span>
             </div>
 
             <div className="space-y-3">

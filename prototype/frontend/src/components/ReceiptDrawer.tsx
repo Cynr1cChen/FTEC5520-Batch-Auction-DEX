@@ -4,30 +4,63 @@ import { useLang } from '../i18n';
 import { formatGas, formatPrice, formatUnitsExact, getRoleMeta, getRuleMeta, shortHash } from '../lib/format';
 import type { ScenarioTrace } from '../types/trace';
 
-interface ReceiptDrawerProps {
+export type ReceiptSourceKind = 'replay' | 'live';
+
+export interface ReceiptFocus {
+  source: ReceiptSourceKind;
+  sceneLabel: string;
   traces: ScenarioTrace[];
+}
+
+interface ReceiptDrawerProps {
+  focus: ReceiptFocus;
   title?: string;
 }
 
-export function ReceiptDrawer({ traces, title }: ReceiptDrawerProps) {
+export function ReceiptDrawer({ focus, title }: ReceiptDrawerProps) {
   const [open, setOpen] = useState(false);
   const [traceIdx, setTraceIdx] = useState(0);
   const [stepLimit, setStepLimit] = useState<number | null>(null);
   const { lang, t } = useLang();
 
+  const focusKey = [
+    focus.source,
+    focus.sceneLabel,
+    ...focus.traces.map(
+      (tr) => `${tr.scenarioId}:${tr.ruleVersion}:${tr.steps.length}:${tr.steps[0]?.txHash ?? ''}`,
+    ),
+  ].join('|');
+
+  useEffect(() => {
+    setTraceIdx(0);
+    setStepLimit(null);
+  }, [focusKey]);
+
+  const traces = focus.traces;
   const safeIdx = traceIdx < traces.length ? traceIdx : 0;
   const active = traces[safeIdx];
 
-  useEffect(() => {
-    setStepLimit(null);
-  }, [active?.scenarioId, active?.ruleVersion, active?.steps.length]);
-
-  if (!active) return null;
-
-  const totalSteps = active.steps.length;
+  const totalSteps = active?.steps.length ?? 0;
   const shownCount = stepLimit === null ? totalSteps : Math.min(stepLimit, totalSteps);
-  const visibleSteps = active.steps.slice(0, shownCount);
+  const visibleSteps = active ? active.steps.slice(0, shownCount) : [];
   const resolvedTitle = title ?? t('On-Chain Receipt & State Audit Drawer', '底层链上回执与状态演进审计抽屉');
+
+  const sourceBadge =
+    focus.source === 'live' ? (
+      active ? (
+        <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-400/40">
+          {t('LIVE', '实链回执')}
+        </span>
+      ) : (
+        <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-bold text-amber-200 ring-1 ring-amber-400/40">
+          {t('LIVE · Ready', '实链待命')}
+        </span>
+      )
+    ) : (
+      <span className="rounded bg-blue-500/20 px-2 py-0.5 text-[11px] font-bold text-blue-200 ring-1 ring-blue-400/40">
+        {t('REPLAY', '离线基准')}
+      </span>
+    );
 
   return (
     <section className="mx-auto mt-4 max-w-[1440px] px-4 pb-6 sm:px-6">
@@ -40,11 +73,18 @@ export function ReceiptDrawer({ traces, title }: ReceiptDrawerProps) {
           <div className="flex flex-wrap items-center gap-2.5 text-xs">
             <FileCheck2 className="h-4 w-4 text-blue-400" />
             <span className="font-bold">{resolvedTitle}</span>
-            <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-300 tabular-nums">
-              {active.scenarioId} · {getRuleMeta(active.ruleVersion, lang).shortName} ·{' '}
-              {t(`${totalSteps} receipts`, `${totalSteps} 笔回执`)} ·{' '}
-              {t('Total Gas', '总 Gas')} {formatGas(active.gas.total)}
-            </span>
+            {sourceBadge}
+            {active ? (
+              <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-300 tabular-nums">
+                {active.scenarioId} · {getRuleMeta(active.ruleVersion, lang).shortName} ·{' '}
+                {t(`${totalSteps} receipts`, `${totalSteps} 笔回执`)} ·{' '}
+                {t('Total Gas', '总 Gas')} {formatGas(active.gas.total)}
+              </span>
+            ) : (
+              <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-300 tabular-nums">
+                {focus.sceneLabel} · {t('0 receipts', '0 笔回执')}
+              </span>
+            )}
             <span className="text-[11px] text-slate-400">
               {t(
                 '(Scope: tx execution Gas only; excludes deploy & approve)',
@@ -55,7 +95,21 @@ export function ReceiptDrawer({ traces, title }: ReceiptDrawerProps) {
           {open ? <ChevronUp className="h-4 w-4 text-slate-300" /> : <ChevronDown className="h-4 w-4 text-slate-300" />}
         </button>
 
-        {open && (
+        {open && !active && (
+          <div className="p-4">
+            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-xs text-slate-600">
+              <span className="mr-2 inline-block rounded bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+                {t('LIVE · Ready', '实链待命')}
+              </span>
+              {t(
+                `Bound to ${focus.sceneLabel}. Awaiting Live execution — no Replay receipts or hashes are shown before running or after Reset.`,
+                `当前已绑定至 ${focus.sceneLabel}，等待实链运行——运行前及 Reset 后不混入离线 Replay 哈希回执。`,
+              )}
+            </div>
+          </div>
+        )}
+
+        {open && active && (
           <div className="p-4">
             {/* Switch between traces if multiple shown side-by-side */}
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
@@ -64,7 +118,11 @@ export function ReceiptDrawer({ traces, title }: ReceiptDrawerProps) {
                   <button
                     key={`${tr.scenarioId}-${tr.ruleVersion}`}
                     type="button"
-                    onClick={() => setTraceIdx(i)}
+                    onClick={() => {
+                      if (i === safeIdx) return;
+                      setTraceIdx(i);
+                      setStepLimit(null);
+                    }}
                     className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
                       i === safeIdx
                         ? 'border-blue-600 bg-blue-50 text-blue-800'
@@ -114,6 +172,15 @@ export function ReceiptDrawer({ traces, title }: ReceiptDrawerProps) {
             <div className="mb-3 grid grid-cols-2 gap-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-600 sm:grid-cols-4">
               <div>
                 <span className="text-slate-400">{t('Source / Chain ID: ', '来源 / 链 ID：')}</span>
+                <span
+                  className={`mr-1.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                    focus.source === 'live'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  {focus.source === 'live' ? t('LIVE', '实链') : t('REPLAY', '回放')}
+                </span>
                 <span className="font-semibold text-slate-800">
                   {active.evidenceSource} · chain {active.chainId}
                 </span>

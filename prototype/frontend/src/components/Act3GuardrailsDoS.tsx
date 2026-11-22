@@ -7,6 +7,7 @@ import { reconcileTraces } from '../lib/reconcile';
 import type { LiveConnectionInfo, LiveScenarioOptions, LiveStepEvent } from '../lib/liveClient';
 import type { GuardrailDefinition, GuardrailResult, RoundRecord, ScenarioTrace } from '../types/trace';
 import { buildReplayStepEvents, ExecutionTheater, type StagedOrderChip } from './ExecutionTheater';
+import type { ReceiptFocus } from './ReceiptDrawer';
 import { ReconcileBadge } from './ReconcileBadge';
 
 interface Act3GuardrailsDoSProps {
@@ -23,7 +24,7 @@ interface Act3GuardrailsDoSProps {
     id: GuardrailDefinition['id'],
     onStage?: (stage: 'reset' | 'sending' | 'reverted') => void,
   ) => Promise<GuardrailResult | null>;
-  onTraceFocus: (traces: ScenarioTrace[]) => void;
+  onTraceFocus: (focus: ReceiptFocus) => void;
 }
 
 export function Act3GuardrailsDoS({
@@ -46,24 +47,30 @@ export function Act3GuardrailsDoS({
   const [liveEvent, setLiveEvent] = useState<LiveStepEvent | null>(null);
   const [streamedRounds, setStreamedRounds] = useState<RoundRecord[] | null>(null);
   const tokenRef = useRef(0);
+  const guardTokenRef = useRef(0);
   const { lang, t } = useLang();
 
   useEffect(() => {
     return () => {
       tokenRef.current += 1;
+      guardTokenRef.current += 1;
     };
   }, []);
 
   useEffect(() => {
     tokenRef.current += 1;
+    guardTokenRef.current += 1;
     setAnimating(false);
     setLiveEvent(null);
     setStreamedRounds(null);
+    setStreaming(false);
+    setGuardStages({});
   }, [mode]);
 
   useEffect(() => {
     if (resetGeneration === 0) return;
     tokenRef.current += 1;
+    guardTokenRef.current += 1;
     setAnimating(false);
     setStreaming(false);
     setLiveEvent(null);
@@ -79,6 +86,14 @@ export function Act3GuardrailsDoS({
   const liveDone = liveMap[sceneId];
   const activeTrace = mode === 'live' && liveDone ? liveDone : replayTrace;
   const report = mode === 'live' && liveDone ? reconcileTraces(liveDone, replayTrace, lang) : null;
+
+  useEffect(() => {
+    onTraceFocus({
+      source: mode,
+      sceneLabel: `Act 3 · ${sceneId}`,
+      traces: mode === 'live' ? (liveDone ? [liveDone] : []) : [replayTrace],
+    });
+  }, [mode, sceneId, liveDone, replayTrace, resetGeneration, onTraceFocus]);
 
   const theaterStatus: 'ready' | 'running' | 'done' = (() => {
     if (streaming || (animating && liveEvent && liveEvent.phase !== 'done')) return 'running';
@@ -131,7 +146,6 @@ export function Act3GuardrailsDoS({
     setStreamedRounds(null);
     setSceneId(next);
     setRoundIdx(0);
-    onTraceFocus([mode === 'live' && liveMap[next] ? liveMap[next] : getTrace(next, 'v2.2')]);
   }
 
   async function revealRoundsStepByStep(fullRounds: RoundRecord[], token: number) {
@@ -145,14 +159,16 @@ export function Act3GuardrailsDoS({
 
   async function triggerLiveScene() {
     const token = ++tokenRef.current;
+    const targetId = sceneId;
     setLiveEvent(null);
     setStreamedRounds(null);
     setRoundIdx(0);
     setStreaming(true);
 
     let roundsPromise: Promise<void> | null = null;
-    const res = await onRunScenario(sceneId, 'v2.2', {
+    const res = await onRunScenario(targetId, 'v2.2', {
       onEvent: (evt) => {
+        if (tokenRef.current !== token) return;
         setLiveEvent(evt);
         if (evt.phase === 'settle' && evt.activeRounds && evt.activeRounds.length > 0 && !roundsPromise) {
           roundsPromise = revealRoundsStepByStep(evt.activeRounds, token);
@@ -161,12 +177,12 @@ export function Act3GuardrailsDoS({
       stepDelayMs: 320,
     });
     if (roundsPromise) await roundsPromise;
+    if (tokenRef.current !== token) return;
     setStreaming(false);
     setStreamedRounds(null);
     if (res) {
-      setLiveMap((prev) => ({ ...prev, [sceneId]: res }));
+      setLiveMap((prev) => ({ ...prev, [targetId]: res }));
       setRoundIdx((res.batches[0]?.rounds?.length ?? 1) - 1);
-      onTraceFocus([res]);
     }
   }
 
@@ -192,9 +208,14 @@ export function Act3GuardrailsDoS({
   }
 
   async function triggerGuardrail(id: GuardrailDefinition['id']) {
+    const gToken = ++guardTokenRef.current;
+    setGuardResults((prev) => ({ ...prev, [id]: undefined }));
     const res = await onRunGuardrail(id, (stage) => {
-      setGuardStages((prev) => ({ ...prev, [id]: stage }));
+      if (guardTokenRef.current === gToken) {
+        setGuardStages((prev) => ({ ...prev, [id]: stage }));
+      }
     });
+    if (guardTokenRef.current !== gToken) return;
     if (res) {
       setGuardResults((prev) => ({ ...prev, [id]: res }));
       setGuardStages((prev) => ({ ...prev, [id]: 'reverted' }));
@@ -220,7 +241,10 @@ export function Act3GuardrailsDoS({
               <p className="text-xs text-slate-500">
                 {t('All 5 4-byte selectors passed in Py-EVM & ', 'Hardhat 测试已逐一核验 4 字节选择器（Py-EVM 与 ')}
                 <code className="rounded bg-slate-100 px-1">local-demo.test.js</code>
-                {t('; switch to Live mode to trigger each revert on-chain.', ' 全绿）；切换到 Live 模式可现场逐个触发真链拦截。')}
+                {t(
+                  '; switch to Live mode to verify each revert via local Hardhat staticCall.',
+                  ' 全绿）；切换到 Live 模式可通过本地 Hardhat 节点 staticCall 现场预检各拦截。',
+                )}
               </p>
             </div>
           </div>
@@ -228,7 +252,7 @@ export function Act3GuardrailsDoS({
 
         <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
           {guardrails.map((g) => {
-            const liveRes = guardResults[g.id];
+            const liveRes = mode === 'live' ? guardResults[g.id] : undefined;
             const stage = guardStages[g.id];
             const isSending = stage === 'reset' || stage === 'sending';
             return (
@@ -239,7 +263,9 @@ export function Act3GuardrailsDoS({
                     ? 'animate-pulse-ring border-amber-400 bg-amber-50/80'
                     : liveRes?.passed
                       ? 'animate-step-pop border-emerald-300 bg-emerald-50/60'
-                      : 'border-slate-200 bg-slate-50/70'
+                      : liveRes
+                        ? 'animate-step-pop border-rose-400 bg-rose-50/80'
+                        : 'border-slate-200 bg-slate-50/70'
                 }`}
               >
                 <div>
@@ -249,9 +275,13 @@ export function Act3GuardrailsDoS({
                       <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
                         <Cpu className="h-3 w-3 animate-spin" /> {t('Testing…', '检测中…')}
                       </span>
-                    ) : liveRes ? (
+                    ) : liveRes?.passed ? (
                       <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
                         <CheckCircle2 className="h-3 w-3" /> {t('Blocked Live', '实链已拦截')}
+                      </span>
+                    ) : liveRes ? (
+                      <span className="inline-flex items-center gap-1 rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-800">
+                        <XCircle className="h-3 w-3" /> {t('Selector Mismatch', '选择器不匹配')}
                       </span>
                     ) : (
                       <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
@@ -262,6 +292,11 @@ export function Act3GuardrailsDoS({
                   <div className="mt-1 font-mono text-xs font-extrabold text-slate-900">{g.errorName}</div>
                   <div className="mt-0.5 text-xs font-semibold text-slate-700">{g.title}</div>
                   <div className="mt-1 text-[11px] text-slate-500">{g.actorAction}</div>
+                  {liveRes && !liveRes.passed && (
+                    <div className="mt-1 font-mono text-[10px] font-semibold text-rose-700">
+                      got {liveRes.actualSelector ?? 'null'}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-2.5 border-t border-slate-200/70 pt-2">
@@ -277,7 +312,7 @@ export function Act3GuardrailsDoS({
                       {isSending
                         ? stage === 'reset'
                           ? t('Resetting Snapshot…', '正在重置快照…')
-                          : t('Sending Invalid Tx…', '发送非法交易…')
+                          : t('Checking staticCall…', '节点 staticCall 预检…')
                         : t('Trigger Revert Live', '现场触发拦截测试')}
                     </button>
                   ) : (

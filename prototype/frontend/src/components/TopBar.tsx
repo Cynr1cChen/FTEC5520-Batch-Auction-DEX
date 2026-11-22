@@ -44,7 +44,6 @@ export function TopBar({
             <div>
               <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-blue-300 uppercase">
                 <span>CUHK FTEC5520A · Group 9</span>
-                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-300">Topic 07</span>
               </div>
               <div className="text-sm font-bold tracking-tight text-white">
                 {t('Anti-MEV Batch Auction DEX Workbench', '抗抢跑批处理 DEX 交互实证控制台')}

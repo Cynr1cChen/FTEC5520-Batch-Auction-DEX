@@ -960,8 +960,8 @@ export async function runLiveGuardrail(
       actualSelector,
       detail: passed
         ? en
-          ? `Blocked on-chain with exact 4-byte selector ${actualSelector}`
-          : `实链精确拦截并匹配 4 字节选择器 ${actualSelector}`
+          ? `Blocked via Hardhat staticCall with exact 4-byte selector ${actualSelector}`
+          : `本地节点 staticCall 精确拦截并匹配 4 字节选择器 ${actualSelector}`
         : en
           ? `Selector mismatch: expected ${expectedSelector}, got ${actualSelector ?? 'null'}`
           : `选择器不匹配：期望 ${expectedSelector}，实际 ${actualSelector ?? 'null'}`,

@@ -7,6 +7,7 @@ import { reconcileTraces } from '../lib/reconcile';
 import type { LiveConnectionInfo, LiveScenarioOptions, LiveStepEvent } from '../lib/liveClient';
 import type { ScenarioTrace } from '../types/trace';
 import { buildReplayStepEvents, ExecutionTheater, type StagedOrderChip } from './ExecutionTheater';
+import type { ReceiptFocus } from './ReceiptDrawer';
 import { ReconcileBadge } from './ReconcileBadge';
 
 interface Act4CrossBatchProps {
@@ -19,7 +20,7 @@ interface Act4CrossBatchProps {
     rule: 'v2.2',
     options?: LiveScenarioOptions,
   ) => Promise<ScenarioTrace | null>;
-  onTraceFocus: (traces: ScenarioTrace[]) => void;
+  onTraceFocus: (focus: ReceiptFocus) => void;
 }
 
 export function Act4CrossBatch({ mode, liveInfo, busy, resetGeneration, onRunScenario, onTraceFocus }: Act4CrossBatchProps) {
@@ -44,6 +45,7 @@ export function Act4CrossBatch({ mode, liveInfo, busy, resetGeneration, onRunSce
     tokenRef.current += 1;
     setAnimating(false);
     setLiveEvent(null);
+    setStreaming(false);
   }, [mode]);
 
   useEffect(() => {
@@ -59,6 +61,14 @@ export function Act4CrossBatch({ mode, liveInfo, busy, resetGeneration, onRunSce
   const liveDone = liveMap[branch];
   const activeTrace = mode === 'live' && liveDone ? liveDone : replayTrace;
   const report = mode === 'live' && liveDone ? reconcileTraces(liveDone, replayTrace, lang) : null;
+
+  useEffect(() => {
+    onTraceFocus({
+      source: mode,
+      sceneLabel: `Act 4 · ${branch}`,
+      traces: mode === 'live' ? (liveDone ? [liveDone] : []) : [replayTrace],
+    });
+  }, [mode, branch, liveDone, replayTrace, resetGeneration, onTraceFocus]);
 
   const theaterStatus: 'ready' | 'running' | 'done' = (() => {
     if (streaming || (animating && liveEvent && liveEvent.phase !== 'done')) return 'running';
@@ -100,21 +110,23 @@ export function Act4CrossBatch({ mode, liveInfo, busy, resetGeneration, onRunSce
     setStreaming(false);
     setLiveEvent(null);
     setBranch(next);
-    onTraceFocus([mode === 'live' && liveMap[next] ? liveMap[next] : getTrace(next, 'v2.2')]);
   }
 
   async function triggerLive() {
-    tokenRef.current += 1;
+    const token = ++tokenRef.current;
+    const targetBranch = branch;
     setLiveEvent(null);
     setStreaming(true);
-    const res = await onRunScenario(branch, 'v2.2', {
-      onEvent: (evt) => setLiveEvent(evt),
+    const res = await onRunScenario(targetBranch, 'v2.2', {
+      onEvent: (evt) => {
+        if (tokenRef.current === token) setLiveEvent(evt);
+      },
       stepDelayMs: 320,
     });
+    if (tokenRef.current !== token) return;
     setStreaming(false);
     if (res) {
-      setLiveMap((prev) => ({ ...prev, [branch]: res }));
-      onTraceFocus([res]);
+      setLiveMap((prev) => ({ ...prev, [targetBranch]: res }));
     }
   }
 

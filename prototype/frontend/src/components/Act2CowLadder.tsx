@@ -7,6 +7,7 @@ import { reconcileTraces } from '../lib/reconcile';
 import type { LiveConnectionInfo, LiveScenarioOptions, LiveStepEvent } from '../lib/liveClient';
 import type { ScenarioTrace } from '../types/trace';
 import { buildReplayStepEvents, ExecutionTheater, type StagedOrderChip } from './ExecutionTheater';
+import type { ReceiptFocus } from './ReceiptDrawer';
 import { ReconcileBadge } from './ReconcileBadge';
 
 interface Act2CowLadderProps {
@@ -19,7 +20,7 @@ interface Act2CowLadderProps {
     rule: 'v2.2',
     options?: LiveScenarioOptions,
   ) => Promise<ScenarioTrace | null>;
-  onTraceFocus: (traces: ScenarioTrace[]) => void;
+  onTraceFocus: (focus: ReceiptFocus) => void;
 }
 
 const TIERS = [
@@ -74,6 +75,7 @@ export function Act2CowLadder({ mode, liveInfo, busy, resetGeneration, onRunScen
     tokenRef.current += 1;
     setAnimating(false);
     setLiveEvent(null);
+    setStreaming(false);
   }, [mode]);
 
   useEffect(() => {
@@ -89,6 +91,14 @@ export function Act2CowLadder({ mode, liveInfo, busy, resetGeneration, onRunScen
   const liveDone = liveMap[selectedId];
   const activeTrace = mode === 'live' && liveDone ? liveDone : replayTrace;
   const report = mode === 'live' && liveDone ? reconcileTraces(liveDone, replayTrace, lang) : null;
+
+  useEffect(() => {
+    onTraceFocus({
+      source: mode,
+      sceneLabel: `Act 2 · ${selectedId}`,
+      traces: mode === 'live' ? (liveDone ? [liveDone] : []) : [replayTrace],
+    });
+  }, [mode, selectedId, liveDone, replayTrace, resetGeneration, onTraceFocus]);
 
   const theaterStatus: 'ready' | 'running' | 'done' = (() => {
     if (streaming || (animating && liveEvent && liveEvent.phase !== 'done')) return 'running';
@@ -159,17 +169,20 @@ export function Act2CowLadder({ mode, liveInfo, busy, resetGeneration, onRunScen
     resolvedEvent?.completedSteps.find((s) => s.action === 'settleBatch')?.gasUsed ?? activeTrace.settleGas;
 
   async function runLive() {
-    tokenRef.current += 1;
+    const token = ++tokenRef.current;
+    const targetId = selectedId;
     setLiveEvent(null);
     setStreaming(true);
-    const res = await onRunScenario(selectedId, 'v2.2', {
-      onEvent: (evt) => setLiveEvent(evt),
+    const res = await onRunScenario(targetId, 'v2.2', {
+      onEvent: (evt) => {
+        if (tokenRef.current === token) setLiveEvent(evt);
+      },
       stepDelayMs: 360,
     });
+    if (tokenRef.current !== token) return;
     setStreaming(false);
     if (res) {
-      setLiveMap((prev) => ({ ...prev, [selectedId]: res }));
-      onTraceFocus([res]);
+      setLiveMap((prev) => ({ ...prev, [targetId]: res }));
     }
   }
 
@@ -193,7 +206,6 @@ export function Act2CowLadder({ mode, liveInfo, busy, resetGeneration, onRunScen
     setStreaming(false);
     setLiveEvent(null);
     setSelectedId(id);
-    onTraceFocus([mode === 'live' && liveMap[id] ? liveMap[id] : getTrace(id, 'v2.2')]);
   }
 
   const currentTier = TIERS.find((item) => item.id === selectedId)!;

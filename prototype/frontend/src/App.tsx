@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getTrace } from './data/traces';
 import { useLang } from './i18n';
 import {
@@ -12,7 +12,7 @@ import {
   runLiveRuleSuite,
   runLiveScenario,
 } from './lib/liveClient';
-import { ReceiptDrawer } from './components/ReceiptDrawer';
+import { ReceiptDrawer, type ReceiptFocus } from './components/ReceiptDrawer';
 import { type ActiveView, type ExecMode, TopBar } from './components/TopBar';
 import { View1CoreArena } from './components/View1CoreArena';
 import { View2RuleLab } from './components/View2RuleLab';
@@ -33,10 +33,16 @@ export function App() {
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [noticeBanner, setNoticeBanner] = useState<string | null>(null);
   const [resetGeneration, setResetGeneration] = useState(0);
-  const [focusedTraces, setFocusedTraces] = useState<ScenarioTrace[]>(() => [
-    getTrace('S1_ordinary_buy_first', 'traditional_amm'),
-    getTrace('S1_ordinary_buy_first', 'v2.2'),
-  ]);
+  const contextGenRef = useRef(0);
+  const activeRunIdRef = useRef(0);
+  const [focusedReceipt, setFocusedReceipt] = useState<ReceiptFocus>(() => ({
+    source: 'replay',
+    sceneLabel: 'Act 1 · S1_ordinary_buy_first',
+    traces: [
+      getTrace('S1_ordinary_buy_first', 'traditional_amm'),
+      getTrace('S1_ordinary_buy_first', 'v2.2'),
+    ],
+  }));
 
   const refreshLiveStatus = useCallback(async () => {
     const info = await inspectLiveEnvironment(lang);
@@ -48,29 +54,26 @@ export function App() {
     void refreshLiveStatus();
   }, [refreshLiveStatus]);
 
+  function clearSceneFeedback() {
+    contextGenRef.current += 1;
+    setErrorBanner(null);
+    setNoticeBanner(null);
+  }
+
   function handleViewChange(view: ActiveView) {
+    if (view === activeView) return;
+    clearSceneFeedback();
     setActiveView(view);
-    if (view === 'core_arena') {
-      setFocusedTraces([
-        getTrace('S1_ordinary_buy_first', 'traditional_amm'),
-        getTrace('S1_ordinary_buy_first', 'v2.2'),
-      ]);
-    } else {
-      setFocusedTraces([
-        getTrace('A_reconsider', 'v2.2'),
-        getTrace('A_reconsider', 'variant_A'),
-        getTrace('A_reconsider', 'variant_B'),
-        getTrace('A_reconsider', 'variant_AB'),
-      ]);
-    }
   }
 
   async function handleModeChange(next: ExecMode) {
-    setErrorBanner(null);
-    setNoticeBanner(null);
+    if (next === mode) return;
+    clearSceneFeedback();
+    const startCtxGen = contextGenRef.current;
+    setMode(next);
     if (next === 'live') {
       const info = await refreshLiveStatus();
-      if (!info.connected) {
+      if (contextGenRef.current === startCtxGen && !info.connected) {
         setErrorBanner(
           info.errorMessage ??
             t(
@@ -80,17 +83,15 @@ export function App() {
         );
       }
     }
-    setMode(next);
   }
 
   async function handleReset() {
-    setErrorBanner(null);
-    setNoticeBanner(null);
+    clearSceneFeedback();
+    setResetGeneration((g) => g + 1);
     setBusyMessage(t('Restoring initial EVM snapshot…', '正在恢复初始 EVM 快照…'));
     try {
       const manifest = await resetDemoViaApi(lang);
       setLiveInfo((prev) => ({ ...prev, manifest, connected: true, staleNodeMismatch: false }));
-      setResetGeneration((g) => g + 1);
       setNoticeBanner(
         t(
           `Reset to initial snapshot (${manifest.initialSnapshotId}): both pools restored to 100 ETH / 200,000 USDC.`,
@@ -111,8 +112,8 @@ export function App() {
   }
 
   async function handleRedeploy() {
-    setErrorBanner(null);
-    setNoticeBanner(null);
+    clearSceneFeedback();
+    setResetGeneration((g) => g + 1);
     setBusyMessage(
       t('Redeploying pools + A/B/AB variants and capturing snapshot…', '正在重新部署双池与 A/B/AB 变体并拍初始快照…'),
     );
@@ -125,7 +126,6 @@ export function App() {
         staleNodeMismatch: false,
         hasVariants: Boolean(manifest.variants?.variant_A),
       });
-      setResetGeneration((g) => g + 1);
       setNoticeBanner(
         t(
           `Redeployed on node ${manifest.nodeInstanceId.slice(0, 12)}… and updated deployment.json.`,
@@ -144,46 +144,75 @@ export function App() {
     rule: RuleVersion,
     options?: LiveScenarioOptions,
   ): Promise<ScenarioTrace | null> {
+    const runId = ++activeRunIdRef.current;
+    const startCtxGen = contextGenRef.current;
     setErrorBanner(null);
     setNoticeBanner(null);
     setBusyMessage(t(`Running ${scenarioId} (${rule}) live…`, `正在实链执行 ${scenarioId} (${rule})…`));
     try {
-      const res = await runLiveScenario(scenarioId, rule, (m) => setBusyMessage(m), lang, options);
+      const res = await runLiveScenario(
+        scenarioId,
+        rule,
+        (m) => {
+          if (activeRunIdRef.current === runId) setBusyMessage(m);
+        },
+        lang,
+        options,
+      );
       setLiveInfo((prev) => ({ ...prev, manifest: res.manifest, connected: true, staleNodeMismatch: false }));
       return res.trace;
     } catch (err) {
-      setErrorBanner(t(`Live execution failed: ${(err as Error).message}`, `Live 执行失败：${(err as Error).message}`));
+      if (contextGenRef.current === startCtxGen) {
+        setErrorBanner(t(`Live execution failed: ${(err as Error).message}`, `Live 执行失败：${(err as Error).message}`));
+      }
       await refreshLiveStatus();
       return null;
     } finally {
-      setBusyMessage(null);
+      if (activeRunIdRef.current === runId) {
+        setBusyMessage(null);
+      }
     }
   }
 
   async function handleRunRuleSuite(scenarioId: string, callbacks?: LiveRuleSuiteCallbacks) {
+    const runId = ++activeRunIdRef.current;
+    const startCtxGen = contextGenRef.current;
     setErrorBanner(null);
     setNoticeBanner(null);
     setBusyMessage(
       t(`Running all 4 rule variants for ${scenarioId} live…`, `正在实链对比 ${scenarioId} 全部 4 套规则…`),
     );
     try {
-      const res = await runLiveRuleSuite(scenarioId, (m) => setBusyMessage(m), lang, callbacks);
-      setLiveInfo((prev) => ({ ...prev, manifest: res.manifest, connected: true, staleNodeMismatch: false }));
-      setNoticeBanner(
-        t(
-          `Completed live execution of all 4 rules for ${scenarioId}. Inspect the Live ≡ Replay wei-parity badges below.`,
-          `已完成 ${scenarioId} 全部 4 套规则的本地实链运行，请查看 Live ≡ Replay 逐 wei 对账徽章。`,
-        ),
+      const res = await runLiveRuleSuite(
+        scenarioId,
+        (m) => {
+          if (activeRunIdRef.current === runId) setBusyMessage(m);
+        },
+        lang,
+        callbacks,
       );
+      setLiveInfo((prev) => ({ ...prev, manifest: res.manifest, connected: true, staleNodeMismatch: false }));
+      if (contextGenRef.current === startCtxGen) {
+        setNoticeBanner(
+          t(
+            `Completed live execution of all 4 rules for ${scenarioId}. Inspect the Live ≡ Replay wei-parity badges below.`,
+            `已完成 ${scenarioId} 全部 4 套规则的本地实链运行，请查看 Live ≡ Replay 逐 wei 对账徽章。`,
+          ),
+        );
+      }
       return res.tracesByRule;
     } catch (err) {
-      setErrorBanner(
-        t(`Live rule suite failed: ${(err as Error).message}`, `规则对比 Live 运行失败：${(err as Error).message}`),
-      );
+      if (contextGenRef.current === startCtxGen) {
+        setErrorBanner(
+          t(`Live rule suite failed: ${(err as Error).message}`, `规则对比 Live 运行失败：${(err as Error).message}`),
+        );
+      }
       await refreshLiveStatus();
       return null;
     } finally {
-      setBusyMessage(null);
+      if (activeRunIdRef.current === runId) {
+        setBusyMessage(null);
+      }
     }
   }
 
@@ -191,22 +220,34 @@ export function App() {
     id: GuardrailDefinition['id'],
     onStage?: (stage: 'reset' | 'sending' | 'reverted') => void,
   ) {
+    const runId = ++activeRunIdRef.current;
+    const startCtxGen = contextGenRef.current;
     setErrorBanner(null);
     setNoticeBanner(null);
     setBusyMessage(t(`Triggering guardrail revert test (${id})…`, `正在现场触发非法拦截校验 (${id})…`));
     try {
       const res = await runLiveGuardrail(id, lang, onStage);
       await refreshLiveStatus();
-      setNoticeBanner(res.detail);
+      if (contextGenRef.current === startCtxGen) {
+        if (res.passed) {
+          setNoticeBanner(res.detail);
+        } else {
+          setErrorBanner(res.detail);
+        }
+      }
       return res;
     } catch (err) {
-      setErrorBanner(
-        t(`Guardrail trigger failed: ${(err as Error).message}`, `非法拦截触发失败：${(err as Error).message}`),
-      );
+      if (contextGenRef.current === startCtxGen) {
+        setErrorBanner(
+          t(`Guardrail trigger failed: ${(err as Error).message}`, `非法拦截触发失败：${(err as Error).message}`),
+        );
+      }
       await refreshLiveStatus();
       return null;
     } finally {
-      setBusyMessage(null);
+      if (activeRunIdRef.current === runId) {
+        setBusyMessage(null);
+      }
     }
   }
 
@@ -234,7 +275,7 @@ export function App() {
                 {mode === 'live' && (
                   <button
                     type="button"
-                    onClick={() => setMode('replay')}
+                    onClick={() => void handleModeChange('replay')}
                     className="rounded-md bg-rose-700 px-2.5 py-1 text-white hover:bg-rose-600"
                   >
                     {t('Switch to Replay Fallback', '一键切换 Replay 兜底')}
@@ -275,7 +316,8 @@ export function App() {
             resetGeneration={resetGeneration}
             onRunScenario={handleRunScenario}
             onRunGuardrail={handleRunGuardrail}
-            onTraceFocus={setFocusedTraces}
+            onActChange={clearSceneFeedback}
+            onTraceFocus={setFocusedReceipt}
           />
         ) : (
           <View2RuleLab
@@ -284,13 +326,13 @@ export function App() {
             busy={Boolean(busyMessage)}
             resetGeneration={resetGeneration}
             onRunRuleSuite={handleRunRuleSuite}
-            onTraceFocus={setFocusedTraces}
+            onTraceFocus={setFocusedReceipt}
           />
         )}
       </main>
 
       {/* Bottom Shared Receipt & Step Audit Drawer */}
-      <ReceiptDrawer traces={focusedTraces} />
+      <ReceiptDrawer focus={focusedReceipt} />
     </div>
   );
 }

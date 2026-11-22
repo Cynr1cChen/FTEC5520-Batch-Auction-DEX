@@ -7,6 +7,7 @@ import { reconcileTraces } from '../lib/reconcile';
 import type { LiveConnectionInfo, LiveScenarioOptions, LiveStepEvent } from '../lib/liveClient';
 import type { ScenarioTrace } from '../types/trace';
 import { buildReplayStepEvents, ExecutionTheater, type StagedOrderChip } from './ExecutionTheater';
+import type { ReceiptFocus } from './ReceiptDrawer';
 import { ReconcileBadge } from './ReconcileBadge';
 
 interface Act1OrderingProps {
@@ -19,7 +20,7 @@ interface Act1OrderingProps {
     rule: 'traditional_amm' | 'v2.2',
     options?: LiveScenarioOptions,
   ) => Promise<ScenarioTrace | null>;
-  onTraceFocus: (traces: ScenarioTrace[]) => void;
+  onTraceFocus: (focus: ReceiptFocus) => void;
 }
 
 function spotFromPool(ethWei?: string, usdcWei?: string): string {
@@ -51,6 +52,7 @@ export function Act1Ordering({ mode, liveInfo, busy, resetGeneration, onTraceFoc
     setAnimating(false);
     setAmmEvent(null);
     setDexEvent(null);
+    setRunningSide('idle');
   }, [mode]);
 
   useEffect(() => {
@@ -69,6 +71,17 @@ export function Act1Ordering({ mode, liveInfo, busy, resetGeneration, onTraceFoc
 
   const liveAmmDone = liveMap[`${scenarioId}:amm`];
   const liveDexDone = liveMap[`${scenarioId}:dex`];
+
+  useEffect(() => {
+    onTraceFocus({
+      source: mode,
+      sceneLabel: `Act 1 · ${scenarioId}`,
+      traces:
+        mode === 'live'
+          ? ([liveAmmDone, liveDexDone].filter(Boolean) as ScenarioTrace[])
+          : [replayAmm, replayDex],
+    });
+  }, [mode, scenarioId, liveAmmDone, liveDexDone, replayAmm, replayDex, resetGeneration, onTraceFocus]);
 
   const ammTrace = mode === 'live' && liveAmmDone ? liveAmmDone : replayAmm;
   const dexTrace = mode === 'live' && liveDexDone ? liveDexDone : replayDex;
@@ -124,33 +137,39 @@ export function Act1Ordering({ mode, liveInfo, busy, resetGeneration, onTraceFoc
   })();
 
   async function runBothLive() {
-    runTokenRef.current += 1;
+    const token = ++runTokenRef.current;
+    const targetSid = scenarioId;
     setAmmEvent(null);
     setDexEvent(null);
     setRunningSide('amm');
-    const a = await onRunScenario(scenarioId, 'traditional_amm', {
-      onEvent: (evt) => setAmmEvent(evt),
+    const a = await onRunScenario(targetSid, 'traditional_amm', {
+      onEvent: (evt) => {
+        if (runTokenRef.current === token) setAmmEvent(evt);
+      },
       stepDelayMs: 360,
     });
+    if (runTokenRef.current !== token) return;
     if (!a) {
       setRunningSide('idle');
       return;
     }
-    setLiveMap((prev) => ({ ...prev, [`${scenarioId}:amm`]: a }));
+    setLiveMap((prev) => ({ ...prev, [`${targetSid}:amm`]: a }));
 
     setRunningSide('dex');
-    const b = await onRunScenario(scenarioId, 'v2.2', {
-      onEvent: (evt) => setDexEvent(evt),
+    const b = await onRunScenario(targetSid, 'v2.2', {
+      onEvent: (evt) => {
+        if (runTokenRef.current === token) setDexEvent(evt);
+      },
       stepDelayMs: 340,
     });
+    if (runTokenRef.current !== token) return;
     setRunningSide('idle');
     if (b) {
       setLiveMap((prev) => ({
         ...prev,
-        [`${scenarioId}:amm`]: a,
-        [`${scenarioId}:dex`]: b,
+        [`${targetSid}:amm`]: a,
+        [`${targetSid}:dex`]: b,
       }));
-      onTraceFocus([a, b]);
     }
   }
 
@@ -184,13 +203,6 @@ export function Act1Ordering({ mode, liveInfo, busy, resetGeneration, onTraceFoc
     setAmmEvent(null);
     setDexEvent(null);
     setOrderChoice(next);
-    const sid = next === 'buy_first' ? 'S1_ordinary_buy_first' : 'S1_ordinary_sell_first';
-    const rA = getTrace(sid, 'traditional_amm');
-    const rD = getTrace(sid, 'v2.2');
-    onTraceFocus([
-      mode === 'live' && liveMap[`${sid}:amm`] ? liveMap[`${sid}:amm`] : rA,
-      mode === 'live' && liveMap[`${sid}:dex`] ? liveMap[`${sid}:dex`] : rD,
-    ]);
   }
 
   const ammSteps = ammStatus === 'ready' ? [] : (resolvedAmmEvent?.completedSteps ?? ammTrace.steps);

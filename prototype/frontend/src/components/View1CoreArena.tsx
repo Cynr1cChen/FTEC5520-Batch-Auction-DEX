@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { getTrace } from '../data/traces';
 import { useLang } from '../i18n';
 import type { LiveConnectionInfo, LiveScenarioOptions } from '../lib/liveClient';
 import type { GuardrailDefinition, GuardrailResult, RuleVersion, ScenarioTrace } from '../types/trace';
@@ -7,6 +6,7 @@ import { Act1Ordering } from './Act1Ordering';
 import { Act2CowLadder } from './Act2CowLadder';
 import { Act3GuardrailsDoS } from './Act3GuardrailsDoS';
 import { Act4CrossBatch } from './Act4CrossBatch';
+import type { ReceiptFocus } from './ReceiptDrawer';
 
 export type CoreAct = 'act1' | 'act2' | 'act3' | 'act4';
 
@@ -24,7 +24,8 @@ interface View1CoreArenaProps {
     id: GuardrailDefinition['id'],
     onStage?: (stage: 'reset' | 'sending' | 'reverted') => void,
   ) => Promise<GuardrailResult | null>;
-  onTraceFocus: (traces: ScenarioTrace[]) => void;
+  onActChange: () => void;
+  onTraceFocus: (focus: ReceiptFocus) => void;
 }
 
 const ACTS: Array<{ id: CoreAct; tag: string; titleEn: string; titleZh: string }> = [
@@ -42,21 +43,15 @@ export function View1CoreArena({
   onRunScenario,
   onRunGuardrail,
   onTraceFocus,
+  onActChange,
 }: View1CoreArenaProps) {
   const [act, setAct] = useState<CoreAct>('act1');
   const { lang } = useLang();
 
   function handleSelectAct(next: CoreAct) {
+    if (next === act) return;
+    onActChange();
     setAct(next);
-    if (next === 'act1') {
-      onTraceFocus([getTrace('S1_ordinary_buy_first', 'traditional_amm'), getTrace('S1_ordinary_buy_first', 'v2.2')]);
-    } else if (next === 'act2') {
-      onTraceFocus([getTrace('S2_sell_0', 'v2.2')]);
-    } else if (next === 'act3') {
-      onTraceFocus([getTrace('T06_single_exclusion', 'v2.2')]);
-    } else {
-      onTraceFocus([getTrace('S3_inventory_alone', 'v2.2')]);
-    }
   }
 
   return (
