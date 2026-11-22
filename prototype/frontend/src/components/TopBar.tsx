@@ -46,7 +46,7 @@ export function TopBar({
                 <span>CUHK FTEC5520A · Group 9</span>
               </div>
               <div className="text-sm font-bold tracking-tight text-white">
-                {t('Anti-MEV Batch Auction DEX Workbench', '抗抢跑批处理 DEX 交互实证控制台')}
+                {t('BatchClear · Batch Auction DEX', 'BatchClear · 批处理 DEX')}
               </div>
               <div className="text-[11px] text-slate-300">
                 {t('ETH / USDC are local test tokens', 'ETH / USDC 为本地测试代币')}

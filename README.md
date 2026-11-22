@@ -1,4 +1,8 @@
-# FTEC5520 Batch Auction DEX
+# BatchClear
+
+**A Batch Auction DEX for Studying Order Dependence and Clearing Trade-offs**
+
+批处理 DEX 中的交易顺序影响与清算规则权衡
 
 CUHK FTEC5520A · Group 9
 
